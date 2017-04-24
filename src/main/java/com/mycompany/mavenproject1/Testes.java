@@ -18,19 +18,7 @@ public class Testes {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        Map<String, String> tst = new HashMap<>();
-        tst.put("11", "fdasf");
-        tst.put("12", "fdasf");
-        tst.put("13", "fdasf");
-        tst.put("14", "fdasf");
-        tst.put("15", "fdasf");
-        tst.put("16", "fdasf");
-        tst.put("17", "fdasf");
-
-        for (String key : tst.keySet()) {
-            String value = tst.get(key);
-            System.out.println(key + " = " + value);
-        }
+        
     }
 
 }

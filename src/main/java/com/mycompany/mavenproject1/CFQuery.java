@@ -5,27 +5,31 @@
  */
 package com.mycompany.mavenproject1;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
  *
  * @author marcos
  */
-public class Query {
+public class CFQuery {
 
     private final String id;
     private final String description;
     private final String nrRelevant;
     private final Map<String, String> relevantScore;
+    private final List<String> relevants;
 
-    public Query(String id, String description, String nrRelevant) {
+    public CFQuery(String id, String description, String nrRelevant) {
         this.id = id;
         this.description = description;
         this.nrRelevant = nrRelevant;
         this.relevantScore = new HashMap<>();
+        this.relevants = new ArrayList<>();
     }
 
     public void PrintQuery() {
@@ -39,6 +43,7 @@ public class Query {
 
     public void addRelevantScore(String nrDoc, String scores) {
         this.relevantScore.put(nrDoc, scores);
+        this.relevants.add(nrDoc);
     }
 
     /**
@@ -67,6 +72,10 @@ public class Query {
      */
     public Map<String, String> getRelevantScore() {
         return relevantScore;
+    }
+    
+    public List<String> getRelevants(){
+        return relevants;
     }
 
 }

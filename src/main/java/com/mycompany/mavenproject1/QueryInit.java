@@ -19,14 +19,14 @@ import java.util.ArrayList;
 public class QueryInit {
 
     private String base;
-    private ArrayList<Query> querys;
+    private ArrayList<CFQuery> querys;
 
     public QueryInit(String base) {
         this.base = base;
-        this.querys = new ArrayList<Query>();
+        this.querys = new ArrayList<CFQuery>();
     }
 
-    public ArrayList<Query> getQuerys() throws IOException {
+    public ArrayList<CFQuery> getQuerys() throws IOException {
         File f = new File(this.base);
         String[] files = f.list();
         String line[], auxRelevants[];
@@ -60,7 +60,7 @@ public class QueryInit {
                                 
                     }
                     description = aux;
-                    this.querys.add(new Query(id, description, nrRelevant));
+                    this.querys.add(new CFQuery(id, description, nrRelevant));
                     relevants += " "+line[i].replace(tagAux, " ") + " ";
                     i++;
                     while (!line[i].equals("") && !line[i].equals(" ") && !line[i].equals("  ") && !line[i].equals(" ")&& !line[i].equals("   ")&& !line[i].equals("    ")&& !line[i].equals("     "))  {
@@ -76,7 +76,7 @@ public class QueryInit {
                     for (int j = 1; j < auxRelevants.length; j += 2) {
                         this.querys.get(qr).addRelevantScore(auxRelevants[j], auxRelevants[j + 1]);
                     }
-                    this.querys.get(qr).PrintQuery();
+                    //this.querys.get(qr).PrintQuery();
                     qr++;
                     aux = "";
                     relevants = "";
