@@ -12,7 +12,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import org.apache.lucene.analysis.en.PorterStemFilter;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.TextField;
 
 /**
  *
@@ -21,29 +25,39 @@ import org.apache.lucene.analysis.en.PorterStemFilter;
 public class Indexer {
 
     private String base;
-    private ArrayList<String> tags;
+    private ArrayList<String> tagsRequired;
+    private ArrayList<String> allTags;
+    private Analysers an;
 
-    public Indexer(String base) {
+    public Indexer(String base) throws IOException {
         this.base = base;
         /**
          * Arraylist com as tags que serão extraídas *
          */
-        this.tags = new ArrayList<String>();
-        this.tags.add("RN");
-        this.tags.add("AU");
-        this.tags.add("TI");
-        this.tags.add("AB");
-        this.tags.add("MJ");
-        this.tags.add("MN");
-        this.tags.add("  ");
+        this.tagsRequired = new ArrayList<String>();
+        this.tagsRequired.add("RN");
+        this.tagsRequired.add("AU");
+        this.tagsRequired.add("TI");
+        this.tagsRequired.add("AB");
+        this.tagsRequired.add("MJ");
+        this.tagsRequired.add("MN");
+        this.tagsRequired.add("  ");
+        this.tagsRequired.add("EX");
+        this.allTags = new ArrayList<String>(this.tagsRequired);
+        this.allTags.add("PN");
+        this.allTags.add("AN");
+        this.allTags.add("SO");
+        this.allTags.add("RF");
+        this.allTags.add("CT");
+        this.an = new Analysers();
     }
 
-    public CFformat getDocument() throws FileNotFoundException, IOException {
+    public List<Document> getDocument() throws FileNotFoundException, IOException {
         /**
          * Retorna um map contendo todos os dados de todso os documentos. *
          */
-        
-//        Map docs = new HashMap<String, HashMap<String, String>>();
+
+        List<Document> list = new ArrayList<>();
         File f = new File(this.base);
         String[] files = f.list();
         String[] line;
@@ -51,6 +65,7 @@ public class Indexer {
         String value = "";
         String tagAux = "";
         CFformat cfFormat = new CFformat();
+        Document doc = new Document();
 
         for (String file : files) {
             String text = new String(Files.readAllBytes(Paths.get(this.base + file)), StandardCharsets.UTF_8);
@@ -60,32 +75,40 @@ public class Indexer {
             int j = 0;
             for (String line1 : line) {
                 if (!line1.isEmpty()) {
-                    tagAux = (String) line1.subSequence(0, 2);
-                    if (this.tags.contains(tagAux)) {
+                    if (line1.length() > 2) {
+                        tagAux = (String) line1.subSequence(0, 2);
+                    } else {
+                        tagAux = line1;
+                    }
+                    if (this.tagsRequired.contains(tagAux)) {
                         if (tagAux.equals("  ")) {
                             value += line1.replace(tagAux, " ");
                         } else {
                             value += line1.replace(tagAux, "");
                             if (!tagAux.equals(tag)) {
                                 tag = tagAux;
-//                                System.out.println(tagAux + "-" + value);
                                 cfFormat.addTupla(tagAux, value.trim());
                                 value = "";
                             }
                         }
 
+                    } else {
+                        if (!this.allTags.contains(tagAux)) {
+                            value = value + " " + line1;
+                        }
                     }
                 } else {
-//                    System.out.println("Doc" + cfFormat.getValue("RN") + " \n");
-//                    docs.put(cfFormat.getValue("RN") + j, cfFormat);
-//                    cfFormat = new CFformat();
-//                    tag = tagAux = value = "";
-
+                    for (String key : cfFormat.getCfDocument().keySet()) {
+                        TextField tF = new TextField(key, an.Process(cfFormat.getValue(key)), Field.Store.YES);
+                        doc.add(tF);
+                    }
                 }
+                list.add(doc);
+                doc = new Document();
             }
 
         }
-        return cfFormat;
+        return list;
 
     }
 }
