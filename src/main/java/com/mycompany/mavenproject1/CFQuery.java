@@ -22,7 +22,7 @@ public class CFQuery {
     private final String description;
     private final String nrRelevant;
     private final Map<String, String> relevantScore;
-    private final List<String> relevants;
+    private  List<Integer> relevants;
 
     public CFQuery(String id, String description, String nrRelevant) {
         this.id = id;
@@ -43,7 +43,7 @@ public class CFQuery {
 
     public void addRelevantScore(String nrDoc, String scores) {
         this.relevantScore.put(nrDoc, scores);
-        this.relevants.add(nrDoc);
+        this.relevants.add(Integer.parseInt(nrDoc));
     }
 
     /**
@@ -74,7 +74,7 @@ public class CFQuery {
         return relevantScore;
     }
     
-    public List<String> getRelevants(){
+    public List<Integer> getRelevants(){
         return relevants;
     }
 

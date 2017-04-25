@@ -32,7 +32,7 @@ public class Analysers {
     {
         stopwords = new HashSet<>();
         standTokz = new StandardTokenizer(AttributeFactory.DEFAULT_ATTRIBUTE_FACTORY);
-        BufferedReader br = new BufferedReader(new FileReader("stopword_list.txt"));
+        BufferedReader br = new BufferedReader(new FileReader("stopwords_list.txt"));
         while(br.ready())
             stopwords.add(br.readLine());      
     }

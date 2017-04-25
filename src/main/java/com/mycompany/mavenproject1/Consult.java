@@ -36,7 +36,7 @@ public class Consult {
         this.idxSearcher = new IndexSearcher(iReader);
         this.idxSearcher.setSimilarity(new BM25Similarity());
         this.an = new Analysers();
-        String[] _tags = {"RN","AU","TI","AB","MJ","MN"};
+        String[] _tags = {"RN","AU","TI","AB","MJ","MN","EX"};
         this.tags = _tags;
     }
     

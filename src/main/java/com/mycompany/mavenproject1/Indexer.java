@@ -12,11 +12,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import org.apache.lucene.analysis.en.PorterStemFilter;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.Directory;
 
 /**
  *
@@ -28,87 +33,129 @@ public class Indexer {
     private ArrayList<String> tagsRequired;
     private ArrayList<String> allTags;
     private Analysers an;
+    private IndexWriter iwr;
 
-    public Indexer(String base) throws IOException {
+    public Indexer(String base, Directory r) throws IOException {
         this.base = base;
-        /**
-         * Arraylist com as tags que serão extraídas *
-         */
-        this.tagsRequired = new ArrayList<String>();
+        this.tagsRequired = new ArrayList<>();
         this.tagsRequired.add("RN");
         this.tagsRequired.add("AU");
         this.tagsRequired.add("TI");
         this.tagsRequired.add("AB");
         this.tagsRequired.add("MJ");
         this.tagsRequired.add("MN");
-        this.tagsRequired.add("  ");
         this.tagsRequired.add("EX");
-        this.allTags = new ArrayList<String>(this.tagsRequired);
+        this.allTags = new ArrayList<>(this.tagsRequired);
         this.allTags.add("PN");
         this.allTags.add("AN");
         this.allTags.add("SO");
         this.allTags.add("RF");
         this.allTags.add("CT");
+        this.allTags.add("");
+
         this.an = new Analysers();
+        Analyzer analyzer = new StandardAnalyzer();
+        IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+        iwr = new IndexWriter(r, iwc);
+        List<Document> list = this.getDocument();
+
+        for (Document doc : list) {
+            iwr.addDocument(doc);
+            //System.out.println(iwr.numDocs());
+        }
+        System.out.println(iwr.numDocs());
+        iwr.close();
+
     }
 
     public List<Document> getDocument() throws FileNotFoundException, IOException {
-        /**
-         * Retorna um map contendo todos os dados de todso os documentos. *
-         */
 
         List<Document> list = new ArrayList<>();
         File f = new File(this.base);
         String[] files = f.list();
         String[] line;
+        Boolean ava = false;
         String tag = "";
         String value = "";
         String tagAux = "";
-        CFformat cfFormat = new CFformat();
+//        CFformat cfFormat = new CFformat();
+        HashMap<String, String> format = new HashMap<>();
         Document doc = new Document();
-
+        int j = 0;
         for (String file : files) {
             String text = new String(Files.readAllBytes(Paths.get(this.base + file)), StandardCharsets.UTF_8);
             text = text.replace("   ", "  ");
             line = text.split("\n");
-//            System.out.println(text);
-            int j = 0;
-            for (String line1 : line) {
-                if (!line1.isEmpty()) {
-                    if (line1.length() > 2) {
-                        tagAux = (String) line1.subSequence(0, 2);
+            for (int i = 0; i < line.length; i++) {
+                if (line[i].equals("")) {
+                    list.add(doc);
+                    doc = new Document();
+                    i++;
+                } else {
+                    if (line[i].length() > 2) {
+                        tagAux = (String) line[i].subSequence(0, 2);
                     } else {
-                        tagAux = line1;
+                        tagAux = line[i];
                     }
                     if (this.tagsRequired.contains(tagAux)) {
-                        if (tagAux.equals("  ")) {
-                            value += line1.replace(tagAux, " ");
-                        } else {
-                            value += line1.replace(tagAux, "");
-                            if (!tagAux.equals(tag)) {
-                                tag = tagAux;
-                                cfFormat.addTupla(tagAux, value.trim());
-                                value = "";
-                            }
+                        tag = tagAux;
+                        value += " " + line[i].replace(tagAux, "");
+                        if (((String) line[i + 1].subSequence(0, 2)).equals("  ")) {
+                            i++;
+                            tagAux = (String) line[i].subSequence(0, 2);
                         }
+                        while (tagAux.equals("  ") || !this.allTags.contains(tagAux)) {
+                            value += " " + line[i].replace(tagAux, "");
 
-                    } else {
-                        if (!this.allTags.contains(tagAux)) {
-                            value = value + " " + line1;
+                            i++;
+                            if (line[i].length() > 2) {
+                                tagAux = (String) line[i].subSequence(0, 2);
+                            } else {
+                                tagAux = line[i];
+                            }
+                            ava = true;
+
+                        }
+//                        System.out.println(tag + " " + value.trim());
+                        TextField tF;
+                        switch (tag) {
+                            case "AB":
+                            case "EX":
+                                tF = new TextField(tag, an.Process(value.trim()), Field.Store.YES);
+                                tF.setBoost(.6f);
+                                break;
+                            case "RN":
+                                tF = new TextField(tag, value.trim(), Field.Store.YES);
+                                break;
+                            case "TI":
+                                tF = new TextField(tag, an.Process(value.trim()), Field.Store.YES);
+                                tF.setBoost(.4f);
+                                break;
+                            case "AU":
+                            case "MJ":
+                            case "MN":
+                                tF = new TextField(tag, value.trim(), Field.Store.YES);
+                                tF.setBoost(.1f);
+                                break;
+                            default:
+                                tF = null;
+                                break;
+                        }
+                        doc.add(tF);
+                        j++;
+                        value = "";
+                        if (ava) {
+                            ava = false;
+                            i--;
                         }
                     }
-                } else {
-                    for (String key : cfFormat.getCfDocument().keySet()) {
-                        TextField tF = new TextField(key, an.Process(cfFormat.getValue(key)), Field.Store.YES);
-                        doc.add(tF);
-                    }
+
                 }
-                list.add(doc);
-                doc = new Document();
             }
 
         }
-        return list;
 
+        System.out.println(j);
+        return list;
     }
 }
