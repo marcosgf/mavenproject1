@@ -122,20 +122,20 @@ public class Indexer {
                             case "AB":
                             case "EX":
                                 tF = new TextField(tag, an.Process(value.trim()), Field.Store.YES);
-                                tF.setBoost(.6f);
+                                //tF.setBoost(.6f);
                                 break;
                             case "RN":
                                 tF = new TextField(tag, value.trim(), Field.Store.YES);
                                 break;
                             case "TI":
                                 tF = new TextField(tag, an.Process(value.trim()), Field.Store.YES);
-                                tF.setBoost(.4f);
+                                //tF.setBoost(.4f);
                                 break;
                             case "AU":
                             case "MJ":
                             case "MN":
                                 tF = new TextField(tag, value.trim(), Field.Store.YES);
-                                tF.setBoost(.1f);
+                                //tF.setBoost(.1f);
                                 break;
                             default:
                                 tF = null;

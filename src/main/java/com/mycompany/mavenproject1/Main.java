@@ -36,14 +36,15 @@ public class Main {
         double recall = 0.0;
         double count = 0;
         for (int r : returns) {
-            System.out.println(r);
+            //System.out.println(r);
             if (relevants.contains(r)) {
                 count++;
             }
         }
+        System.out.println("cout:" + count + " retornados:" + returns.size() + " ");
         precision = count / returns.size();
         recall = count / relevants.size();
-        br.write(Id + ":" + precision + " " + recall + "\n");
+        br.write(Id + "\t" + precision + "\t" + recall + "\n");
 
     }
 
@@ -53,17 +54,20 @@ public class Main {
         Consult cns = new Consult(r);
         //Envia Querys 
         List<Integer> result = new ArrayList<>();
-        BufferedWriter br = new BufferedWriter(new FileWriter("results.txt"));
+        BufferedWriter br = new BufferedWriter(new FileWriter("resultsSemBoost.txt"));
         for (CFQuery q : query.getQuerys()) {
-            TopDocs tp = cns.searchMultiField(q.getDescription(), 25);
+            System.out.println("nrRele:" + Integer.valueOf(q.getNrRelevant()));
+            TopDocs tp = cns.searchMultiField(q.getDescription(),100);
+            System.out.println(q.getId());
             for (ScoreDoc scDoc : tp.scoreDocs) {
                 Document d = cns.getDoc(scDoc);
                 System.out.println(d.getField("RN"));
                 result.add(Integer.parseInt(d.getField("RN").stringValue()));
             }
             //gera resultados para cada consulta
-            results(result, q.getRelevants(), br, q.getId());
-            break;
+            results(q.getRelevants(),result, br, q.getId());
+            result.clear();
+            
         }
         br.close();
 
